@@ -1,0 +1,25 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t cmvl/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run cmvl/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t cmvl/multi-client ./client
+    - docker build -t cmvl/multi-nginx ./nginx
+    - docker build -t cmvl/multi-server ./server
+    - docker build -t cmvl/multi-worker ./worker
+    
+    #Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    #Take those images adn push them to dockerhub
+    - docker push cmvl/multi-client
+    - docker push cmvl/multi-nginx
+    - docker push cmvl/multi-server
+    - docker push cmvl/multi-worker
+    
+
